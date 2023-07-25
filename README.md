@@ -38,3 +38,20 @@
 		
 		//initializing the filename variable with the uploaded file url
 		filename = resp.URL
+
+
+  -----------------------------------------------
+  query
+  -----------------------------------------------
+  SELECT teamname, leavetype, count(*) as leave_count
+FROM employee_leave_data
+WHERE EXTRACT(YEAR from fromdate) = 2022
+AND teamname IN (
+    SELECT teamname
+    FROM employee_leave_data
+    WHERE EXTRACT(YEAR from fromdate) = 2022
+    GROUP BY teamname
+    ORDER BY count(*) DESC
+    LIMIT 2
+)
+GROUP BY teamname, leavetype;
