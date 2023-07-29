@@ -616,3 +616,699 @@ class _KpiDashboardState extends State<KpiDashboard> {
     );
   }
 }
+
+
+
+---------------------------------------
+reg page
+---------------------------------------
+import 'package:flutter/material.dart';
+import 'package:wc_form_validators/wc_form_validators.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:fluttertoast/fluttertoast.dart';
+
+class RegistrationPage extends StatefulWidget {
+  const RegistrationPage({super.key});
+
+  @override
+  State<RegistrationPage> createState() => _RegistrationPageState();
+}
+
+class _RegistrationPageState extends State<RegistrationPage> {
+  bool isChecked = false;
+  final formKey = GlobalKey<FormState>();
+  late String labelText;
+
+  final TextEditingController leavetypeController = TextEditingController();
+  final TextEditingController teamnameController = TextEditingController();
+  final TextEditingController reporterController = TextEditingController();
+  final TextEditingController fromdateController = TextEditingController();
+  final TextEditingController todateController = TextEditingController();
+final TextEditingController nameController = TextEditingController();
+
+  void registerUser() async {
+    var url = Uri.parse('http://172.18.0.1:8080/employee');
+    var headers = {'Content-Type': 'application/json'};
+
+    var jsonData = {
+      "name": nameController.text,
+      "leavetype": leavetypeController.text,
+      "fromdate": fromdateController.text,
+      "todate": todateController.text,
+      "teamname": teamnameController.text,
+      "reporter": reporterController.text,
+    };
+
+    debugPrint('hello $jsonData');
+    var body = jsonEncode(jsonData);
+    var response = await http.post(url, headers: headers, body: body);
+
+    if (response.statusCode == 200) {
+      Fluttertoast.showToast(
+        msg: 'REGISTERED SUCCESSFULLY !!',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.CENTER,
+      );
+      debugPrint(response.body);
+    } else {
+      // Request failed
+      debugPrint('Request failed with status: ${response.statusCode}');
+      debugPrint(response.body);
+    }
+  }
+
+  Future<void> _selectFromDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2101),
+    );
+    if (picked != null && picked != DateTime.now()) {
+      setState(() {
+        fromdateController.text = picked.toLocal().toString().split(' ')[0];
+      });
+    }
+  }
+
+  Future<void> _selectToDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2101),
+    );
+    if (picked != null && picked != DateTime.now()) {
+      setState(() {
+        todateController.text = picked.toLocal().toString().split(' ')[0];
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
+    return Scaffold(
+      backgroundColor: const Color(0xFF009688),
+      appBar: AppBar(
+        centerTitle: true,
+        backgroundColor: Colors.teal,
+        elevation: 0,
+        leading: IconButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          icon: const Icon(Icons.arrow_left),
+        ),
+        title: const Text(
+          'REGISTRATION',
+          style: TextStyle(fontSize: 20, letterSpacing: 1.5),
+        ),
+      ),
+      body: SingleChildScrollView(
+        child: Form(
+          key: formKey,
+          child: Center(
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              width: screenWidth * 0.9,
+              height: screenHeight * 0.85,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                color: const Color(0xFFFFFFFF).withOpacity(0.25),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  const Image(
+                    image: AssetImage('images/bg_second_page.png'),
+                    color: Colors.white,
+                    width: 100,
+                  ),
+                  TextFormField(
+                    controller: nameController,
+                    style: buildTextStyleFormFields(),
+                    validator: Validators.required('Name is required'),
+                    decoration: buildInputDecoration('Name'),
+                  ),
+                  DropdownButtonFormField(
+                    
+                   
+                    onChanged: (value) {
+                      leavetypeController.text = value.toString();
+                      
+                    },
+                    items: const [
+                      DropdownMenuItem(
+                        value: 'Casual Leave',
+                        child: Text('Casual Leave'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'Earned Leave',
+                        child: Text('Earned Leave'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'Sick Leave',
+                        child: Text('Sick Leave'),
+                      ),
+                    ],
+                    validator: Validators.required('Reporter is required'),
+                    decoration: buildInputDecoration('Leave Type'),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      
+                      Expanded(
+                        child: GestureDetector(
+                                          onTap: () => _selectFromDate(context),
+                                          child: AbsorbPointer(
+                        child: TextFormField(
+                          controller: fromdateController,
+                          style: buildTextStyleFormFields(),
+                          validator: Validators.required('From Date is required'),
+                          decoration: buildInputDecoration('From Date'),
+                        ),
+                                          ),
+                                        ),
+                      ),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => _selectToDate(context),
+                      child: AbsorbPointer(
+                        child: TextFormField(
+                          controller: todateController,
+                          style: buildTextStyleFormFields(),
+                          validator: Validators.required('To Date is required'),
+                          decoration: buildInputDecoration('To Date'),
+                        ),
+                      ),
+                    ),
+                  ),
+                    ],
+                  ),
+                  
+                  Row(
+                    children: [
+                      const Text(
+                        'Team Name:',
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          children: [
+                            RadioListTile<String>(
+                              activeColor: Colors.white,
+                              fillColor: MaterialStateColor.resolveWith((states) => Colors.white),
+                              title: const Text(
+                                'AWS',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                ),
+                              ),
+                              value: 'aws',
+                              groupValue: teamnameController.text,
+                              onChanged: (String? value) {
+                                setState(() {
+                                  teamnameController.text = value!;
+                                });
+                              },
+                            ),
+                            RadioListTile<String>(
+                              activeColor: Colors.white,
+                              fillColor: MaterialStateColor.resolveWith((states) => Colors.white),
+
+                              title: const Text(
+                                'Azure',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                ),
+                              ),
+                              value: 'azure',
+                              groupValue: teamnameController.text,
+                              onChanged: (String? value) {
+                                setState(() {
+                                  teamnameController.text = value!;
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  DropdownButtonFormField(
+                    
+                   
+                    onChanged: (value) {
+                      reporterController.text = value.toString();
+                      
+                    },
+                    items: const [
+                      DropdownMenuItem(
+                        value: 'john hopkins',
+                        child: Text('John Hopkins'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'raj singh',
+                        child: Text('Raj Singh'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'pooja mishra',
+                        child: Text('Pooja Mishra'),
+                      ),
+                    ],
+                    validator: Validators.required('Reporter is required'),
+                    decoration: buildInputDecoration('Reporter'),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Checkbox(
+                        checkColor: const Color(0xFF009866),
+                        fillColor: const MaterialStatePropertyAll(Colors.white),
+                        value: isChecked,
+                        onChanged: (bool? value) {
+                          setState(() {
+                            isChecked = value!;
+                          });
+                        },
+                      ),
+                      const Text(
+                        'Agree with Terms & Condition.',
+                        style: TextStyle(
+                          color: Color(0xFFFFFFFF),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      )
+                    ],
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      if (isChecked && formKey.currentState!.validate()) {
+                        // Checkbox is checked and form data is valid
+                        registerUser();
+                        formKey.currentState?.reset();
+                        leavetypeController.clear();
+                        fromdateController.clear();
+                        todateController.clear();
+                        teamnameController.clear();
+                        reporterController.clear();
+                      } else {
+                        Fluttertoast.showToast(
+                          msg: 'Please agree to the Terms & Conditions',
+                          toastLength: Toast.LENGTH_SHORT,
+                          gravity: ToastGravity.CENTER,
+                        );
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      elevation: 0,
+                      backgroundColor: const Color(0xFF009688),
+                      minimumSize: Size(screenWidth * .9, screenHeight * .06),
+                    ),
+                    child: const Text('Submit'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  TextStyle buildTextStyleFormFields() {
+    return const TextStyle(color: Colors.white);
+  }
+
+  InputDecoration buildInputDecoration(String labelText) {
+    return InputDecoration(
+      fillColor: Colors.teal[50],
+      labelText: labelText,
+      labelStyle: const TextStyle(fontSize: 18, color: Colors.white),
+      focusedBorder: const OutlineInputBorder(
+        borderSide: BorderSide(color: Colors.white, width: 1.8),
+      ),
+      enabledBorder: const OutlineInputBorder(
+        borderSide: BorderSide(color: Colors.white, width: 3),
+      ),
+      errorBorder: const OutlineInputBorder(
+        borderSide: BorderSide(color: Colors.red, width: 1),
+      ),
+    );
+  }
+}
+
+----------------------------------------------------
+k page
+----------------------------------------------------
+
+import 'dart:convert';
+
+import 'dart:async';
+
+import 'package:charts_flutter/flutter.dart' as charts;
+
+import 'package:flutter/material.dart';
+
+import 'package:http/http.dart' as http;
+
+import 'package:pie_chart/pie_chart.dart' as piechart;
+
+class KpiDashboard extends StatefulWidget {
+  const KpiDashboard({Key? key}) : super(key: key);
+
+  @override
+  _KpiDashboardState createState() => _KpiDashboardState();
+}
+
+class _KpiDashboardState extends State<KpiDashboard> {
+  List<charts.Series<Sales, String>> seriesList = [];
+
+  Map<String, Map<String, double>> allTeamsDataMap = {};
+
+  String endpointUrl = "http://172.18.0.1:8080/employees/";
+
+  @override
+  void initState() {
+    super.initState();
+
+    _fetchData();
+  }
+
+  Future<void> _fetchData() async {
+    var seriesList = await _createRandomData();
+
+    setState(() {
+      this.seriesList = seriesList;
+    });
+  }
+
+  Future<List<charts.Series<Sales, String>>> _createRandomData() async {
+    var values = await kpi4();
+
+    List<Sales> desktopSalesData = values.map((value) {
+      return Sales(value['Reporter'], value['Count']);
+    }).toList();
+
+    return [
+      charts.Series<Sales, String>(
+        id: 'Sales',
+        domainFn: (Sales sales, _) => sales.x,
+        measureFn: (Sales sales, _) => sales.y,
+        data: desktopSalesData,
+        fillColorFn: (Sales sales, _) =>
+            charts.MaterialPalette.blue.shadeDefault,
+      ),
+    ];
+  }
+
+  Future<List<dynamic>> kpi3() async {
+    var kpi = Uri.parse("${endpointUrl}kpi3");
+
+    var res = await http.get(kpi);
+
+    if (res.statusCode == 200) {
+      var jsonData = jsonDecode(res.body);
+
+      return jsonData;
+    } else {
+      throw Exception('Unexpected error occurred');
+    }
+  }
+
+  Future<List<dynamic>> kpi4() async {
+    var kpi = Uri.parse("${endpointUrl}kpi4");
+
+    var res = await http.get(kpi);
+
+    if (res.statusCode == 200) {
+      var jsonData = jsonDecode(res.body);
+
+      return jsonData;
+    } else {
+      throw Exception('Failed to fetch data');
+    }
+  }
+
+  Future<List<dynamic>> kpi6() async {
+    var kpi = Uri.parse("${endpointUrl}kpi6");
+
+    var res = await http.get(kpi);
+
+    if (res.statusCode == 200) {
+      var jsonData = jsonDecode(res.body);
+
+      return jsonData;
+    } else {
+      throw Exception('Failed to fetch data');
+    }
+  }
+
+  Map<String, Map<String, double>> dataMap(List<dynamic> kpi6Data) {
+    Map<String, Map<String, double>> teamDataMap = {};
+
+    for (var entry in kpi6Data) {
+      String teamName = entry['Teamname'];
+
+      String leaveType = entry['Leavetype'];
+
+      double leaveCount = entry['Leavecount'].toDouble();
+
+      teamDataMap.putIfAbsent(teamName, () => {});
+
+      teamDataMap[teamName]![leaveType] = leaveCount;
+    }
+
+    return teamDataMap;
+  }
+
+  barChart() {
+    return charts.BarChart(
+      seriesList,
+      animate: true,
+      vertical: true,
+      barGroupingType: charts.BarGroupingType.grouped,
+      defaultRenderer: charts.BarRendererConfig(
+        groupingType: charts.BarGroupingType.grouped,
+        strokeWidthPx: 1.0,
+      ),
+      domainAxis: const charts.OrdinalAxisSpec(
+        renderSpec: charts.SmallTickRendererSpec(
+          labelRotation: 60,
+          labelStyle: charts.TextStyleSpec(
+            fontSize: 12,
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+
+    double screenHeight = MediaQuery.of(context).size.height;
+
+    return Scaffold(
+      backgroundColor: Colors.teal,
+      appBar: AppBar(
+        centerTitle: true,
+        backgroundColor: Colors.teal,
+        elevation: 0,
+        leading: IconButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          icon: const Icon(Icons.arrow_back),
+        ),
+        title: const Text(
+          'KPI DASHBOARD',
+          style: TextStyle(fontSize: 20, letterSpacing: 1.5),
+        ),
+        actions: [
+          IconButton(
+            onPressed: _refreshAction,
+            icon: const Icon(Icons.refresh),
+            color: Colors.white,
+          )
+        ],
+      ),
+      body: SingleChildScrollView(
+        child: Center(
+          child: Column(
+            children: [
+              TitleContainer(
+                screenWidth: screenWidth,
+                title: 'Employees With Maximum Leave Taken.',
+              ),
+              Container(
+                width: screenWidth * 0.9,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: const Color(0xFFFFFFFF).withOpacity(0.50),
+                ),
+                child: FutureBuilder<List<dynamic>>(
+                  future: kpi3(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    } else if (snapshot.hasError) {
+                      return Text('Error: ${snapshot.error}');
+                    } else {
+                      List<dynamic> data = snapshot.data ?? [];
+
+                      List<DataRow> rows = data.map((data) {
+                        return DataRow(cells: [
+                          DataCell(Text(data['Name'] ?? '')),
+                          DataCell(Text(data['Totalleave2023'].toString())),
+                        ]);
+                      }).toList();
+
+                      return SingleChildScrollView(
+                        child: DataTable(
+                          columns: const [
+                            DataColumn(label: Text('NAME')),
+                            DataColumn(label: Text('MOST LEAVE 2023')),
+                          ],
+                          rows: rows,
+                        ),
+                      );
+                    }
+                  },
+                ),
+              ),
+              const SizedBox(
+                height: 20,
+              ),
+              TitleContainer(
+                screenWidth: screenWidth,
+                title: 'Employees Leaves Distribution Under Each Manager.',
+              ),
+              Container(
+                width: screenWidth * 0.9,
+                height: screenHeight * 0.4,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: const Color(0xFFFFFFFF).withOpacity(0.50),
+                ),
+                child: barChart(),
+              ),
+              const SizedBox(
+                height: 20,
+              ),
+              TitleContainer(
+                screenWidth: screenWidth,
+                title: 'Distribution of Most Leave Taken by 2 Teams',
+              ),
+              FutureBuilder<List<dynamic>>(
+                future: kpi6(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}'));
+                  } else {
+                    allTeamsDataMap = dataMap(snapshot.data ?? []);
+
+                    return Column(
+                      children: allTeamsDataMap.entries.map((entry) {
+                        String teamName = entry.key;
+
+                        Map<String, double> teamDataMap = entry.value;
+
+                        return Column(
+                          children: [
+                            Container(
+                              margin: const EdgeInsets.only(bottom: 5),
+                              width: screenWidth * 0.9,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12),
+                                color:
+                                    const Color(0xFFFFFFFF).withOpacity(0.50),
+                              ),
+                              child: piechart.PieChart(
+                                dataMap: teamDataMap,
+                                centerText: teamName,
+                              ),
+                            ),
+                          ],
+                        );
+                      }).toList(),
+                    );
+                  }
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  _refreshAction() {
+    setState(() {});
+  }
+}
+
+class TitleContainer extends StatelessWidget {
+  const TitleContainer({
+    super.key,
+    required this.screenWidth,
+    required this.title,
+  });
+
+  final String title;
+
+  final double screenWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(5),
+      margin: const EdgeInsets.only(bottom: 5),
+      width: screenWidth * 0.9,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        color: const Color(0xFFFFFFFF).withOpacity(0.50),
+      ),
+      child: Text(
+        title,
+        textAlign: TextAlign.center,
+        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.teal),
+      ),
+    );
+  }
+}
+
+class Sales {
+  final String x;
+
+  final int y;
+
+  Sales(this.x, this.y);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
