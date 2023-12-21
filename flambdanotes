@@ -89,3 +89,73 @@ func Handler(ctx context.Context, req events.APIGatewayProxyRequest) (events.API
 func main() {
 	lambda.Start(Handler)
 }
+
+// other example
+package main
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+
+	"github.com/aws/aws-lambda-go/events"
+	"github.com/aws/aws-lambda-go/lambda"
+)
+
+type APIResponse struct {
+	Message string `json:"message"`
+	// Add other fields as needed based on the API response structure
+}
+
+func fetchDataFromAPI(apiURL string) (*APIResponse, error) {
+	// Create an HTTP client
+	client := http.Client{}
+
+	// Make a GET request to the API
+	resp, err := client.Get(apiURL)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	// Read the response body
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	// Parse the JSON response
+	var apiResponse APIResponse
+	err = json.Unmarshal(body, &apiResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	return &apiResponse, nil
+}
+
+func Handler(ctx context.Context, req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	// Replace "https://api.example.com" with the actual API endpoint
+	apiURL := "https://api.example.com"
+
+	// Fetch data from the external API
+	apiResponse, err := fetchDataFromAPI(apiURL)
+	if err != nil {
+		return events.APIGatewayProxyResponse{}, err
+	}
+
+	// Do something with the API response, for example, log it
+	fmt.Printf("Received message from API: %s\n", apiResponse.Message)
+
+	// Return a response to the client
+	return events.APIGatewayProxyResponse{
+		StatusCode: http.StatusOK,
+		Body:       "Data fetched successfully",
+	}, nil
+}
+
+func main() {
+	lambda.Start(Handler)
+}
