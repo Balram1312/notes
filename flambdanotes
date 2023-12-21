@@ -1,0 +1,91 @@
+// lambda 1st method
+// main.go
+
+package main
+
+import (
+	"context"
+	"fmt"
+	"github.com/aws/aws-lambda-go/lambda"
+	"net/http"
+	"time"
+
+	"github.com/gin-gonic/gin"
+)
+
+var router *gin.Engine
+
+func init() {
+	// Initialize Gin router
+	router = gin.Default()
+
+	// Define your Gin routes here
+	router.GET("/", handleRequest)
+}
+
+func handleRequest(ctx *gin.Context) {
+	// Your logic to handle the periodic invocation goes here
+	// This could include calling third-party APIs, syncing data, etc.
+	fmt.Println("Lambda function executed at:", time.Now().Format(time.RFC3339))
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "Lambda function executed successfully!",
+	})
+}
+
+func main() {
+	// Start the Gin server
+	go func() {
+		if err := router.Run(":8080"); err != nil {
+			fmt.Println("Error starting Gin server:", err)
+		}
+	}()
+
+	// Start the Lambda function handler
+	lambda.Start(lambdaHandler)
+}
+
+func lambdaHandler(ctx context.Context) {
+	// Execute your logic here when the Lambda function is triggered
+	// For this example, we'll just call the Gin handler directly
+	ginLambdaContext := &gin.Context{}
+
+	handleRequest(ginLambdaContext)
+}
+
+
+//lambda second method
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/aws/aws-lambda-go/events"
+	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/awslabs/aws-lambda-go-api-proxy/gin"
+	"github.com/gin-gonic/gin"
+)
+
+var ginLambda *ginadapter.GinLambda
+
+func init() {
+	// stdout and stderr are sent to AWS CloudWatch Logs
+	log.Printf("Gin cold start")
+	r := gin.Default()
+	r.GET("/ping", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"message": "pong",
+		})
+	})
+
+	ginLambda = ginadapter.New(r)
+}
+
+func Handler(ctx context.Context, req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	// If no name is provided in the HTTP request body, throw an error
+	return ginLambda.ProxyWithContext(ctx, req)
+}
+
+func main() {
+	lambda.Start(Handler)
+}
