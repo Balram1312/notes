@@ -1,7 +1,8 @@
 # notes
 
-
+https://discord.com/invite/yae79zfz
 		
+
 		// Open the file variable which we get from Html form (From Upload File Input)
 		src, err := file.Open()
 		if err != nil {
