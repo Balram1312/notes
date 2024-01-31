@@ -1,0 +1,50 @@
+package main
+
+import (
+	"fmt"
+	"log"
+	"os"
+	"os/exec"
+)
+
+func main() {
+	// HTML content with iframe containing a map
+	htmlContent := `
+		<!DOCTYPE html>
+		<html>
+		<head>
+			<title>Map PDF</title>
+		</head>
+		<body>
+			<h1>HTML Page with Map</h1>
+			<iframe width="600" height="450" frameborder="0" style="border:0" src="https://your-map-url.com"></iframe>
+		</body>
+		</html>
+	`
+
+	// Create a temporary HTML file
+	htmlFile, err := os.CreateTemp("", "temp*.html")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer os.Remove(htmlFile.Name())
+	defer htmlFile.Close()
+
+	// Write HTML content to the file
+	_, err = htmlFile.WriteString(htmlContent)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Specify the output PDF file
+	pdfFile := "output.pdf"
+
+	// Use wkhtmltopdf to convert HTML to PDF
+	cmd := exec.Command("wkhtmltopdf", htmlFile.Name(), pdfFile)
+	err = cmd.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("PDF generated successfully: %s\n", pdfFile)
+}
