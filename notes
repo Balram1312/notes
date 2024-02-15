@@ -1,0 +1,5 @@
+// Calculate the number of iterations needed
+	iterations := len(arr) / 6
+	if len(arr)%6 != 0 {
+		iterations++
+	}
