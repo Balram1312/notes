@@ -3,3 +3,9 @@
 	if len(arr)%6 != 0 {
 		iterations++
 	}
+
+-----------------------
+concat ws
+----------------------
+CONCAT_WS('</br>', NULLIF(firstname, ''), NULLIF(middlename, ''), NULLIF(secondname, '')) AS concatenated_names
+
