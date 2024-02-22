@@ -7,5 +7,26 @@
 -----------------------
 concat ws
 ----------------------
-CONCAT_WS('</br>', NULLIF(firstname, ''), NULLIF(middlename, ''), NULLIF(secondname, '')) AS concatenated_names
+	CONCAT_WS('</br>', NULLIF(firstname, ''), NULLIF(middlename, ''), NULLIF(secondname, '')) AS concatenated_names
+---------------------
+QR to base64
+--------------------
+	// Create the barcode
+	qrCode, _ := qr.Encode(t1, qr.M, qr.Auto)
+
+	// Scale the barcode to 2000x2000 pixels
+	qrCode, _ = barcode.Scale(qrCode, 2000, 2000)
+
+	// Encode the barcode as PNG
+	var qrCodeBuffer bytes.Buffer
+	if err := png.Encode(&qrCodeBuffer, qrCode); err != nil {
+		log.Println("Error encoding QR Code: ", err)
+		return
+	}
+
+	// Convert bytes to base64
+	encodedStr := base64.StdEncoding.EncodeToString(qrCodeBuffer.Bytes())
+
+	// Print the base64 encoded string
+	log.Println(encodedStr)
 
