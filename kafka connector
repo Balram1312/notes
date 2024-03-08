@@ -1,0 +1,20 @@
+# Use the official Kafka Connect image as the base image
+FROM confluentinc/cp-kafka-connect:latest
+
+# Install the Elasticsearch connector
+COPY kafka-connect-elasticsearch-demo.zip /tmp/
+RUN confluent-hub install --no-prompt /tmp/kafka-connect-elasticsearch-*.zip
+
+# Copy custom connector configurations
+COPY connect-standalone.properties /etc/kafka/connect-standalone.properties
+COPY connect-elasticsearch.properties /etc/kafka/connect-elasticsearch.properties
+
+# Set the connector configuration environment variable
+ENV CONNECT_PLUGIN_PATH=/usr/share/java,/etc/kafka-connect/jars
+
+# Expose the REST API port
+EXPOSE 8083
+
+# Note: Remember to replace kafka-connect-elasticsearch-*.zip with the actual filename of your Kafka Connect Elasticsearch connector zip file, and update connect-standalone.properties and connect-elasticsearch.properties with your desired configurations.
+# > docker build -t my-kafka-connect-image .
+# > docker run -d -p 8083:8083 my-kafka-connect-image
