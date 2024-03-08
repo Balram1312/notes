@@ -1,3 +1,6 @@
+# please consider following reference
+# https://thecodinginterface.com/blog/snowflake-kafka-connect-data-pipeline/
+
 # Use the official Kafka Connect image as the base image
 FROM confluentinc/cp-kafka-connect:latest
 
