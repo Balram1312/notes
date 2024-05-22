@@ -30,3 +30,31 @@ QR to base64
 	// Print the base64 encoded string
 	log.Println(encodedStr)
 
+
+dynamic row calculation
+-------------------------------------------
+// Recursive function to calculate the number of lines for cell content
+func calculateRowsForCell(cellContent string, maxCellWidth int, avgCharWidth int) int {
+	words := strings.Fields(cellContent)
+	return countLines(words, maxCellWidth, avgCharWidth, 0, 0, 0)
+}
+
+// Helper recursive function to count lines
+func countLines(words []string, maxCellWidth int, avgCharWidth int, currentLineLength int, lineCount int, wordIndex int) int {
+	// Base case: If no more words, return the line count
+	if wordIndex >= len(words) {
+		return lineCount + 1 // Add 1 to account for the last line
+	}
+
+	// Calculate the length of the current word
+	wordLength := len(words[wordIndex]) * avgCharWidth
+
+	// Check if adding this word exceeds the max cell width
+	if currentLineLength+wordLength > maxCellWidth {
+		// If so, start a new line
+		return countLines(words, maxCellWidth, avgCharWidth, wordLength+avgCharWidth, lineCount+1, wordIndex+1)
+	}
+
+	// Otherwise, add the word to the current line
+	return countLines(words, maxCellWidth, avgCharWidth, currentLineLength+wordLength+avgCharWidth, lineCount, wordIndex+1)
+}
