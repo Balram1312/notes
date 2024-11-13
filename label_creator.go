@@ -3,89 +3,92 @@ package main
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/phpdave11/gofpdf"
 )
 
 // generateShippingLabel generates the shipping label in PDF format as per the specifications
 func generateShippingLabel() {
+	startTime := time.Now()
+
 	// Create a new PDF document with dimensions 10x10 cm
 	pdf := gofpdf.New("P", "cm", "A4", "")
 	pdf.SetMargins(0, 0, 0)
 	pdf.AddPageFormat("P", gofpdf.SizeType{Wd: 10, Ht: 10})
 
-	// Set font for the text
-	pdf.SetFont("Arial", "", 8)
+	// Set font for the text (scaled down 10px, from 6px to 5px)
+	pdf.SetFont("Arial", "", 5)
 
-	// 1. Add Contract ID
-	pdf.CellFormat(0, 0.8, "Contract ID: 369613", "", 1, "L", false, 0, "")
+	// 1. Add Contract ID (scaled down)
+	pdf.CellFormat(0, 0.7, "Contract ID: 369613", "", 1, "L", false, 0, "")
 
-	// 2. Add Horizontal Line and Company Logo
-	pdf.SetDrawColor(0, 0, 0)                                          // black color for line
-	pdf.Line(0, pdf.GetY(), 6, pdf.GetY())                             // horizontal line at 60% width
-	pdf.Image("logo.png", 6.5, pdf.GetY()-0.5, 2, 2, false, "", 0, "") // Logo at 20x20 px
+	// Logo at 18x18 px (scaled down from 20x20 px)
+	pdf.Image("logo.png", 6.1, pdf.GetY()-0.45, 1.8, 1.8, false, "", 0, "")
 
-	// Move to next line after logo and line
-	pdf.Ln(1.5)
+	// Move to next line after logo
+	pdf.Ln(0)
 
-	// 3. Add "SENDER ADDRESS"
-	pdf.CellFormat(0, 0.8, "SENDER ADDRESS", "", 1, "L", false, 0, "")
+	// 3. Add "SENDER ADDRESS" (scaled down)
+	pdf.MultiCell(6.1, 0.3, "SENDER ADDRESS\nBalram\nViale Italia 537,\n19125 La Spezia (SP)", "LBT", "L", false)
 
-	// 4. Add sender's name
-	pdf.CellFormat(0, 0.8, "Balram", "", 1, "L", false, 0, "")
-
-	// 5. Add sender's address (2 lines)
-	pdf.CellFormat(0, 0.8, "Viale Italia 537,", "", 1, "L", false, 0, "")
-	pdf.CellFormat(0, 0.8, "19125 La Spezia (SP)", "", 1, "L", false, 0, "")
-	pdf.Ln(0.5)
-
-	// 6. Add a table with two columns for QR Code and Barcode
+	// 6. Add a table with two columns for QR Code and Barcode (scaled down)
 	pdf.SetDrawColor(0, 0, 0) // Set color for table borders
 
-	// Table headers for QR Code and Barcode with borders
-	pdf.CellFormat(4.5, 1.5, "QR CODE", "1", 0, "C", false, 0, "") // Left cell for QR Code
-	pdf.CellFormat(4.5, 1.5, "BARCODE", "1", 1, "C", false, 0, "") // Right cell for Barcode
-	pdf.Ln(0.5)
+	// Define the overall table width for QR Code and Barcode table
+	pageTableWidth := 8.8 // This will define the total width of the table
 
-	// 7. Add Destination Code and Delivery Address
-	// First Cell: Destination Code with rotated text
-	pdf.Rect(0, pdf.GetY(), 2, 4, "D") // Rectangle for Destination Code
-	pdf.SetTextColor(255, 0, 0)        // Red color for rotated text
+	// Define proportional column widths for QR Code and Barcode table
+	qrColWidth := [2]float64{
+		pageTableWidth * 0.5, // 50% of the total table width for QR Code column
+		pageTableWidth * 0.5, // 50% for Barcode column
+	}
 
-	// Rotate text for vertical alignment using TransformBegin, TransformRotate, and TransformEnd
-	pdf.TransformBegin()
-	pdf.TransformRotate(90, 1, pdf.GetY()+2) // Rotate text by 90 degrees around a point
-	pdf.Text(1, pdf.GetY()+1, "LV01")        // Positioned for vertical center
-	pdf.TransformEnd()
+	// Table headers for QR Code and Barcode with borders (scaled down)
+	pdf.CellFormat(qrColWidth[0], 1.8, "QR CODE", "1", 0, "C", false, 0, "") // Left cell for QR Code
+	pdf.CellFormat(qrColWidth[1], 1.8, "BARCODE", "1", 1, "C", false, 0, "") // Right cell for Barcode
+	pdf.Ln(0)
 
-	pdf.SetTextColor(0, 0, 0) // Reset text color to black
+	// 7. Add Delivery Address section
+	// Delivery address will use the same pageTableWidth proportionally as well
+	pageTableWidthDelivery := pageTableWidth // Can adjust independently for the address if needed
 
-	// Second Cell: Delivery Address
-	pdf.Rect(3, pdf.GetY(), 7, 4, "D") // Rectangle for Delivery Address
-	pdf.SetXY(3.2, pdf.GetY()+0.5)
-	pdf.CellFormat(0, 0.8, "DELIVERY ADDRESS", "", 1, "L", false, 0, "")
-	pdf.SetX(3.2)
-	pdf.CellFormat(0, 0.8, "Piyush Sonawane", "", 1, "L", false, 0, "")
-	pdf.SetX(3.2)
-	pdf.CellFormat(0, 0.8, "Via Giotto Ciardi 18,", "", 1, "L", false, 0, "")
-	pdf.SetX(3.2)
-	pdf.CellFormat(0, 0.8, "57121 Livorno (LI)", "", 1, "L", false, 0, "")
-	pdf.Ln(1.5)
+	// Delivery Address content
+	pdf.MultiCell(pageTableWidthDelivery, 0.35, "DELIVERY ADDRESS\n\nPiyush Sonawane, Via Giotto Ciardi\n18,57121 Livorno (LI)", "1", "L", false)
+	pdf.Ln(0)
 
-	// 8. Add 5x3 Table with rowspan in the first column and colspan in the bottom row
-	pdf.SetFont("Arial", "", 7)
+	// Define column widths for the data table (the main data table, not QR or Barcode table)
+	// Proportional widths of the columns
+	colWidth := [5]float64{
+		pageTableWidth * 0.2, // 20% for column 1
+		pageTableWidth * 0.2, // 20% for column 2
+		pageTableWidth * 0.2, // 20% for column 3
+		pageTableWidth * 0.2, // 20% for column 4
+		pageTableWidth * 0.2, // 20% for column 5
+	}
 
-	// Row 1 with rowspan in the first cell
-	pdf.CellFormat(2.2, 1.6, "Row 1 Col 1 (Rowspan)", "1", 0, "L", false, 0, "") // Rowspan for first column
-	pdf.CellFormat(3.3, 0.8, "Row 1 Col 2", "1", 0, "L", false, 0, "")
-	pdf.CellFormat(3.3, 0.8, "Row 1 Col 3", "1", 1, "L", false, 0, "")
+	lnBreakHeight := 0.7
 
-	// Row 2 with rowspan in the first column
-	pdf.CellFormat(3.3, 0.8, "Row 2 Col 2", "1", 0, "L", false, 0, "")
-	pdf.CellFormat(3.3, 0.8, "Row 2 Col 3", "1", 1, "L", false, 0, "")
+	// Row 1 with a "rowspan" effect on the first column
+	// First column: "Lv02" with a larger height (scaled down)
+	pdf.CellFormat(colWidth[0], 1.4, "Lv02", "1", 0, "L", false, 0, "")
+	pdf.CellFormat(colWidth[1], 0.7, "Row 1 Col 2", "1", 0, "L", false, 0, "")
+	pdf.CellFormat(colWidth[2], 0.7, "Row 1 Col 3", "1", 0, "L", false, 0, "")
+	pdf.CellFormat(colWidth[3], 0.7, "Row 1 Col 4", "1", 0, "L", false, 0, "")
+	pdf.CellFormat(colWidth[4], 0.7, "Row 1 Col 5", "1", 0, "L", false, 0, "")
+	pdf.Ln(lnBreakHeight)
 
-	// Bottom row with colspan
-	pdf.CellFormat(9.8, 0.8, "Bottom Row Colspan", "1", 1, "L", false, 0, "") // Colspan across all columns
+	// Row 2 with a "rowspan" effect on the first column (skip first column)
+	pdf.CellFormat(colWidth[0], 0.7, "", "2", 0, "L", false, 0, "") // Empty cell for first column (simulating rowspan)
+	pdf.CellFormat(colWidth[1], 0.7, "Row 2 Col 2", "1", 0, "L", false, 0, "")
+	pdf.CellFormat(colWidth[2], 0.7, "Row 2 Col 3", "1", 0, "L", false, 0, "")
+	pdf.CellFormat(colWidth[3], 0.7, "Row 2 Col 4", "1", 0, "L", false, 0, "")
+	pdf.CellFormat(colWidth[4], 0.7, "Row 2 Col 5", "1", 0, "L", false, 0, "")
+	pdf.Ln(lnBreakHeight)
+
+	// Bottom row with a "colspan" effect (scaled down)
+	pdf.CellFormat(pageTableWidth, 0.7, "Bottom Row Colspan", "1", 0, "L", false, 0, "") // Colspan across all columns
+	pdf.Ln(lnBreakHeight)
 
 	// Save the PDF file
 	err := pdf.OutputFileAndClose("shipping_label.pdf")
@@ -94,6 +97,7 @@ func generateShippingLabel() {
 	}
 
 	fmt.Println("Shipping label generated successfully!")
+	log.Println("time taken to generate label: ", time.Since(startTime))
 }
 
 func main() {
