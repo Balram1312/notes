@@ -1,0 +1,90 @@
+// Define the Condition type
+type Condition = {
+  condition: string;
+  isMet: boolean;
+  operator: 'OR' | 'AND' | null;
+  group:  'OR' | 'AND' | null;
+};
+
+function evaluateOr(conds: Condition[]): boolean {
+    return conds.some(cond => cond.isMet);
+}
+
+// Function to group conditions based on the `OR` operator
+function groupConditions(conditions: Condition[]): Condition[][] {
+  const groups: Condition[][] = [];
+  let currentGroup: Condition[] = [];
+  let isOR = false
+  let isAND = false
+  let iterator = 0
+
+  if (conditions[0]){
+      groups.push([])
+      conditions[0].group = conditions[0].operator
+      groups[iterator].push(conditions[0])
+  }
+
+
+  for (let i = 0; i < conditions.length; i++) {
+    if (conditions[i].operator === 'OR') {
+      if (conditions[i+1]){
+        conditions[i+1].group = 'OR'
+        groups[iterator].push(conditions[i+1])
+      }
+      isOR = true
+      isAND = false
+    }else if(conditions[i].operator === 'AND'){
+      groups.push([])
+      iterator += 1
+      conditions[i+1].group = 'AND'
+      groups[iterator].push(conditions[i+1])
+      isAND = true
+      isOR = true
+    }
+    // (c1 or c2 or c3 or c4) and ( c5 or c6 )
+    // (c1 or c2 or c3 ) and c4 and ( c5 or c6 )
+    // c1 and ( c2 or c3 ) and c4 and ( c5 or c6 )
+    // c1 and ( c2 or c3 ) and ( c4 or c5 or c6 )
+
+    // // If the condition is an event label, skip it
+    // if (condition.condition === 'event label') {
+    //   continue;
+    // }
+
+    // // Check if it's an OR operator (if operator is OR, start a new group)
+    // if (condition.operator === 'OR') {
+    //   if (currentGroup.length > 0) {
+    //     groups.push(currentGroup); // Push the current group before starting a new one
+    //   }
+    //   currentGroup = [condition]; // Start a new group with this condition
+    // } else {
+    //   // Add the condition to the current group
+    //   currentGroup.push(condition);
+    // }
+  }
+  console.log('groups ',groups)
+
+  console.log(currentGroup)
+
+  // Add the last group if it contains conditions
+  if (currentGroup.length > 0) {
+    groups.push(currentGroup);
+  }
+
+  return groups;
+}
+
+// Example Conditions
+const c1: Condition = { condition: 'some condition', isMet: false, operator: 'AND' };
+const c2: Condition = { condition: 'event label', isMet: true, operator: 'OR' }; // Should be ignored
+const c3: Condition = { condition: 'some condition', isMet: true, operator: 'AND' };
+const c4: Condition = { condition: 'some condition', isMet: true, operator: 'OR' };
+const c5: Condition = { condition: 'another condition', isMet: false, operator: 'OR' };
+const c6: Condition = { condition: 'yet another condition', isMet: true, operator: null };
+
+// c1 and ( c2 or c3 ) and ( c4 or c5 or c6 )
+
+// Group the conditions
+const conditions: Condition[] = [c1, c2, c3, c4, c5, c6];
+const groupedConditions = groupConditions(conditions);
+
